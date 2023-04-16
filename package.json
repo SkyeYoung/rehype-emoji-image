@@ -1,0 +1,24 @@
+{
+  "name": "remark-emoji-image",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepare": "esbuild ./src/main.js  --bundle --platform=node --external:sequelize --minify --outfile=./dist/main.js",
+    "play": "node ./dist/main.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "emoji-regex": "^10.2.1",
+    "gemoji": "^8.1.0",
+    "mdast-util-find-and-replace": "^2.2.2",
+    "simple-git": "^3.17.0"
+  },
+  "devDependencies": {
+    "@types/node": "^18.15.11",
+    "esbuild": "^0.17.16"
+  }
+}
