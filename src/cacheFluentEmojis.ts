@@ -1,13 +1,14 @@
-import { fetchOrUpdateCache, needUpdate, traverseFolder } from "./common"
+import { fetchOrUpdateCache, needUpdate, traverseFolder } from './common';
 import { readFile, writeFile } from 'fs/promises';
 
 type CacheFluentEmojisRes = {
-    cacheDir: string,
-    metaFile: string,
-    headIdFile: string,
-}
+  cacheDir: string;
+  metaFile: string;
+  headIdFile: string;
+  emojiDir: string;
+};
 export const cacheFluentEmojis = async (): Promise<CacheFluentEmojisRes> => {
-  const rootDir = '.emoji-cache'
+  const rootDir = '.emoji-cache';
   const cacheDir = `${rootDir}/fluent-emojis`;
   const metaFile = `${rootDir}/fluent-emojis.json`;
   const headIdFile = `${rootDir}/fluent-emojis-head-id.txt`;
@@ -16,11 +17,11 @@ export const cacheFluentEmojis = async (): Promise<CacheFluentEmojisRes> => {
   const git = await fetchOrUpdateCache({
     path: cacheDir,
     url: 'https://github.com/microsoft/fluentui-emoji.git',
-    sparsePaths: [emojiDir]
-  })
+    sparsePaths: [emojiDir],
+  });
 
   if (await needUpdate(git, headIdFile)) {
-    const emojiMap = {}
+    const emojiMap = {};
     await traverseFolder(`${cacheDir}/${emojiDir}`, async ({ filePath }) => {
       if (filePath.endsWith('metadata.json')) {
         const data = JSON.parse(await readFile(filePath, 'utf-8'));
@@ -28,16 +29,17 @@ export const cacheFluentEmojis = async (): Promise<CacheFluentEmojisRes> => {
       }
       return { continue: true };
     });
-  
-    await writeFile(metaFile, JSON.stringify(emojiMap), 'utf-8')
+
+    await writeFile(metaFile, JSON.stringify(emojiMap), 'utf-8');
   }
 
   return {
     cacheDir: cacheDir + '/' + emojiDir,
     metaFile,
     headIdFile,
-  }
-}
+    emojiDir,
+  };
+};
 
 export enum FluentEmojiTypeEnum {
   _3D = '3D',
@@ -45,11 +47,15 @@ export enum FluentEmojiTypeEnum {
   Flat = 'Flat',
   HighContrast = 'High Contrast',
 }
-export const getFluentEmoji = async (config: CacheFluentEmojisRes, emoji: string, type: FluentEmojiTypeEnum) => {
+export const getFluentEmoji = async (
+  config: CacheFluentEmojisRes,
+  emoji: string,
+  type: FluentEmojiTypeEnum
+) => {
   const emojiMap = JSON.parse(await readFile(config.metaFile, 'utf8'));
   const emojiInfo = emojiMap[emoji];
   if (!emojiInfo) {
-    return 
+    return;
   }
 
   const emojiPath: string = emojiInfo?.cldr || '';
@@ -58,6 +64,8 @@ export const getFluentEmoji = async (config: CacheFluentEmojisRes, emoji: string
 
   return {
     meta: emojiInfo,
+    filename,
     path: `${config.cacheDir}/${emojiPath}/${type}/${filename}`,
+    remotePath: `${config.emojiDir}/${emojiPath}/${type}/${filename}`,
   };
-}
+};

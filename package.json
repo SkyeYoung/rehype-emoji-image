@@ -14,8 +14,8 @@
   "dependencies": {
     "emoji-regex": "^10.2.1",
     "gemoji": "^8.1.0",
-    "mdast-util-find-and-replace": "^2.2.2",
-    "simple-git": "^3.17.0"
+    "simple-git": "^3.17.0",
+    "unist-util-visit": "^4.1.2"
   },
   "devDependencies": {
     "@types/node": "^18.15.11",

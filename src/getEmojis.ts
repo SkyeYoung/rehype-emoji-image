@@ -1,8 +1,8 @@
-import type { Gemoji } from "gemoji";
-import { gemoji, nameToEmoji, emojiToName } from "gemoji";
+import type { Gemoji } from 'gemoji';
+import { gemoji, nameToEmoji, emojiToName } from 'gemoji';
 import emojiRegex from 'emoji-regex';
 
-const shortCodeRegExp = /:(\+1|[-\w]+):/g
+const shortCodeRegExp = /:(\+1|[-\w]+):/g;
 
 type EmojiInfo = {
   emoji: string;
@@ -10,7 +10,7 @@ type EmojiInfo = {
   gemoji?: Gemoji;
   from: number;
   to: number;
-}
+};
 
 const emojiRegExp = emojiRegex();
 
@@ -33,10 +33,10 @@ const getEmojis = (str: string): EmojiInfo[] => {
       to: from + rawCode.length,
     });
   }
-  
+
   for (const match of str.matchAll(emojiRegExp)) {
-    const emoji = match[0]
-    const from = match.index || 0
+    const emoji = match[0];
+    const from = match.index || 0;
     res.push({
       emoji,
       shortCode: emojiToName[emoji],
@@ -47,6 +47,6 @@ const getEmojis = (str: string): EmojiInfo[] => {
   }
 
   return res;
-}
+};
 
 export default getEmojis;
