@@ -1,4 +1,4 @@
-import simpleGit, {SimpleGit} from 'simple-git';
+import simpleGit, { SimpleGit } from 'simple-git';
 import { readdir, stat, readFile, writeFile } from 'fs/promises';
 import { join } from 'path';
 
@@ -12,7 +12,7 @@ type Config = {
   path: string;
   url: string;
   sparsePaths: string[];
-}
+};
 
 export const fetchOrUpdateCache = async (config: Config) => {
   let git: SimpleGit;
@@ -23,26 +23,27 @@ export const fetchOrUpdateCache = async (config: Config) => {
   } else {
     git = simpleGit();
     await git
-    .clone(
-      url, 
-      path, 
-      {
+      .clone(url, path, {
         '--filter': 'blob:none',
-        '--sparse': null, 
+        '--sparse': null,
         '--recurse-submodules': 'no',
       })
-    .cwd(path)
-    .raw(['sparse-checkout', 'set', ...sparsePaths]);
+      .cwd(path)
+      .raw(['sparse-checkout', 'set', ...sparsePaths]);
   }
 
   return git;
-}
+};
 
 type TraverseFolderCallback = (params: {
   err?: Error | null;
   filePath: string;
-}) => Promise<{ continue?: boolean, break?: boolean} | void>;
-export async function traverseFolder(folderPath: string, callback: TraverseFolderCallback, { stopOnError = true } = {}) {
+}) => Promise<{ continue?: boolean; break?: boolean } | void>;
+export async function traverseFolder(
+  folderPath: string,
+  callback: TraverseFolderCallback,
+  { stopOnError = true } = {}
+) {
   try {
     const files = await readdir(folderPath);
     for await (const filename of files) {
@@ -51,9 +52,11 @@ export async function traverseFolder(folderPath: string, callback: TraverseFolde
       if (stats.isDirectory()) {
         await traverseFolder(fullFilePath, callback, { stopOnError });
       } else if (stats.isFile()) {
-        const res = await callback({ filePath: fullFilePath});
-        if (res?.break) break;
-        if (res?.continue) continue;
+        const res = await callback({ filePath: fullFilePath });
+        if (res) {
+          if (res?.break) break;
+          if (res?.continue) continue;
+        }
       }
     }
   } catch (err) {
@@ -65,15 +68,14 @@ export async function traverseFolder(folderPath: string, callback: TraverseFolde
   }
 }
 
-export const needUpdate = async (git: SimpleGit, headIdFile: string)=> Promise.all([
-  git.revparse(['HEAD']),
-  readFile(headIdFile, 'utf-8').catch(() => ''),
-])
-.then(async ([headId, oldHeadId]) => {
-  if (headId === oldHeadId) {
-    return false;
-  }
+export const needUpdate = async (git: SimpleGit, headIdFile: string) =>
+  Promise.all([git.revparse(['HEAD']), readFile(headIdFile, 'utf-8').catch(() => '')]).then(
+    async ([headId, oldHeadId]) => {
+      if (headId === oldHeadId) {
+        return false;
+      }
 
-  await writeFile(headIdFile, headId, 'utf-8');
-  return true;
-});
+      await writeFile(headIdFile, headId, 'utf-8');
+      return true;
+    }
+  );

@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "esnext",
+    "declaration": true,
+    "outDir": "dist",
+    "lib": [
+      "esnext"
+    ],
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "emitDeclarationOnly": true,
+    "isolatedModules": true,
+  },
+  "include": [
+    "src/main.ts",
+  ],
+}

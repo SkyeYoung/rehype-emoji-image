@@ -2,11 +2,12 @@
   "name": "remark-emoji-image",
   "version": "1.0.0",
   "description": "",
+  "module": "dist/main.esm.js",
   "main": "dist/main.js",
+  "types": "dist/main.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "prepare": "esbuild ./src/main.js  --bundle --platform=node --external:sequelize --minify --outfile=./dist/main.js",
-    "play": "node ./dist/main.js"
+    "build": "tsc && esbuild src/main.ts --bundle --format=esm --minify --platform=node --outfile=dist/main.esm.js && esbuild src/main.ts --bundle --format=cjs --minify --platform=node --outfile=dist/main.js"
   },
   "keywords": [],
   "author": "",
@@ -19,6 +20,7 @@
   },
   "devDependencies": {
     "@types/node": "^18.15.11",
-    "esbuild": "^0.17.16"
+    "esbuild": "^0.17.16",
+    "typescript": "^5.0.4"
   }
 }
