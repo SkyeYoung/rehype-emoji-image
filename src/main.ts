@@ -40,7 +40,8 @@ const transformer = async (
         const dir = option.publicPrefix
           ? option.publicDir.replace(option.publicPrefix, '')
           : option.publicDir;
-        p = `${dir}/${fluentEmoji.filename}`;
+
+        p = join(dir, fluentEmoji.file);
         copySet.add({
           file: fluentEmoji.file,
           path: fluentEmoji.path,
