@@ -3,23 +3,22 @@ import getEmojis from './getEmojis';
 import { FluentEmojiTypeEnum, cacheFluentEmojis, getFluentEmoji } from './cacheFluentEmojis';
 import { copyFile } from 'fs/promises';
 import { join } from 'path';
+import { fromHtml } from 'hast-util-from-html';
 
-type CopySet = Set<Pick<Awaited<ReturnType<typeof getFluentEmoji>>, 'filename' | 'path'>>;
+type CopySet = Set<Pick<Awaited<ReturnType<typeof getFluentEmoji>>, 'file' | 'path'>>;
 const copyImg2Public = async (copySet: CopySet, option: Option) => {
   await Promise.all(Array.from(copySet).map((v) => copyFile(
     join(process.cwd(),v.path), 
-    join(process.cwd(),option.publicDir, v.filename))));
+    join(process.cwd(),option.publicDir, v.file))));
 };
 
 const transformer = async (
   str: string,
   option: Option,
   cacheConfig: Awaited<ReturnType<typeof cacheFluentEmojis>>
-): Promise<[boolean, string]> => {
-  const emojis = getEmojis(str);
-  console.log(str, emojis);
-  
-  if (!emojis.length) return [false, str];
+): Promise<[true, string] | [false]> => {
+  const emojis = getEmojis(str);  
+  if (!emojis.length) return [false];
 
   const fluentEmojis = await Promise.all(
     emojis.map(async ({ emoji }) => getFluentEmoji(cacheConfig, emoji, option.emojiType))
@@ -43,14 +42,14 @@ const transformer = async (
           : option.publicDir;
         p = `${dir}/${fluentEmoji.filename}`;
         copySet.add({
-          filename: fluentEmoji.filename,
+          file: fluentEmoji.file,
           path: fluentEmoji.path,
         });
       } else {
         p = fluentEmoji.remotePath;
       }
 
-      res = /*html*/ `<img src="${p}" alt="${v.gemoji?.description || v.shortCode}" title="${
+      res = /*html*/ `<img src="${p}" width="${option.emojiSize}" height="${option.emojiSize}" alt="${v.gemoji?.description || v.shortCode}" title="${
         v.emoji
       }" />`;
     }
@@ -60,16 +59,14 @@ const transformer = async (
     finalStr = finalStr.replace(v.raw, res);
   });
 
-  console.log("finalStr", finalStr);
-
   await copyImg2Public(copySet, option);
 
   return [true, finalStr];
 };
 
 type Option = {
-  publicDir: string;
-  emojiType: FluentEmojiTypeEnum;
+  publicDir?: string;
+  emojiType?: FluentEmojiTypeEnum;
   emojiSize?: string;
   cacheDir?: string;
   location?: 'local' | 'remote';
@@ -80,8 +77,8 @@ const main = (option: Option) => async (tree: Parameters<typeof visit>[0]) => ne
   const cacheConfig = await cacheFluentEmojis();
 
   const nodesShouldCheck = [];
-  (visit as any)(tree, 'text', async (node) => {
-    console.log(node);
+
+  visit(tree, 'text', (node) => {
     nodesShouldCheck.push(node);
   }); 
 
@@ -102,19 +99,14 @@ const main = (option: Option) => async (tree: Parameters<typeof visit>[0]) => ne
     );
 
     if (hasEmojis) {
-      const n  = node as any;
-      (node as any).value = value;
-      (node as any).position.end = {
-        line: n.position.end.line,
-        column: n.position.start.column + value.length,
-        offset:  n.position.start.offset + value.length,
-      };
+      node.type = "element";
+      node.tagName = "span";
+      node.properties = {};
+      node.children = fromHtml(value, {fragment: true}).children;
     }
-
   }
-
-
-  resolve(true);
+  
+  resolve(tree);
 }); 
 
 export default main;
