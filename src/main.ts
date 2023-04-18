@@ -2,25 +2,31 @@ import { visit } from 'unist-util-visit';
 import getEmojis from './getEmojis';
 import { FluentEmojiTypeEnum, cacheFluentEmojis, getFluentEmoji } from './cacheFluentEmojis';
 import { copyFile } from 'fs/promises';
+import { join } from 'path';
 
-const copyImg2Public = async (copySet: Set<string>, option: Option) => {
-  await Promise.all(Array.from(copySet).map((path) => copyFile(path, option.publicDir)));
+type CopySet = Set<Pick<Awaited<ReturnType<typeof getFluentEmoji>>, 'filename' | 'path'>>;
+const copyImg2Public = async (copySet: CopySet, option: Option) => {
+  await Promise.all(Array.from(copySet).map((v) => copyFile(
+    join(process.cwd(),v.path), 
+    join(process.cwd(),option.publicDir, v.filename))));
 };
 
 const transformer = async (
   str: string,
   option: Option,
   cacheConfig: Awaited<ReturnType<typeof cacheFluentEmojis>>
-) => {
+): Promise<[boolean, string]> => {
   const emojis = getEmojis(str);
-  if (!emojis.length) return str;
+  console.log(str, emojis);
+  
+  if (!emojis.length) return [false, str];
 
   const fluentEmojis = await Promise.all(
     emojis.map(async ({ emoji }) => getFluentEmoji(cacheConfig, emoji, option.emojiType))
   );
 
   let finalStr = str;
-  const copySet = new Set<string>();
+  const copySet= new Set() as CopySet;
   emojis.forEach((v, i) => {
     const fluentEmoji = fluentEmojis[i];
 
@@ -36,7 +42,10 @@ const transformer = async (
           ? option.publicDir.replace(option.publicPrefix, '')
           : option.publicDir;
         p = `${dir}/${fluentEmoji.filename}`;
-        copySet.add(fluentEmoji.path);
+        copySet.add({
+          filename: fluentEmoji.filename,
+          path: fluentEmoji.path,
+        });
       } else {
         p = fluentEmoji.remotePath;
       }
@@ -45,12 +54,17 @@ const transformer = async (
         v.emoji
       }" />`;
     }
-    finalStr = finalStr.replace(str.substring(v.from, v.to + 1), res);
+    
+    console.log(`Get ${v.emoji}, converting to ${res}`);
+
+    finalStr = finalStr.replace(v.raw, res);
   });
+
+  console.log("finalStr", finalStr);
 
   await copyImg2Public(copySet, option);
 
-  return finalStr;
+  return [true, finalStr];
 };
 
 type Option = {
@@ -62,11 +76,17 @@ type Option = {
   publicPrefix?: string;
 };
 
-const main = (option: Option) => async (tree: Parameters<typeof visit>[0]) => {
+const main = (option: Option) => async (tree: Parameters<typeof visit>[0]) => new Promise(async (resolve, reject ) =>{
   const cacheConfig = await cacheFluentEmojis();
 
-  (visit as any)(tree, 'text', async (node, idx) => {
-    await transformer(
+  const nodesShouldCheck = [];
+  (visit as any)(tree, 'text', async (node) => {
+    console.log(node);
+    nodesShouldCheck.push(node);
+  }); 
+
+  for (const node of nodesShouldCheck) {
+    const [hasEmojis, value ] = await transformer(
       (node as any).value,
       {
         ...{
@@ -81,8 +101,20 @@ const main = (option: Option) => async (tree: Parameters<typeof visit>[0]) => {
       cacheConfig
     );
 
-    return [idx, 'SKIP'] as unknown as any;
-  });
-};
+    if (hasEmojis) {
+      const n  = node as any;
+      (node as any).value = value;
+      (node as any).position.end = {
+        line: n.position.end.line,
+        column: n.position.start.column + value.length,
+        offset:  n.position.start.offset + value.length,
+      };
+    }
+
+  }
+
+
+  resolve(true);
+}); 
 
 export default main;

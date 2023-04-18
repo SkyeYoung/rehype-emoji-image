@@ -1,5 +1,5 @@
 import { fetchOrUpdateCache, needUpdate, traverseFolder } from './common';
-import { readFile, writeFile } from 'fs/promises';
+import { readFile, writeFile, stat } from 'fs/promises';
 
 type CacheFluentEmojisRes = {
   cacheDir: string;
@@ -34,12 +34,16 @@ export const cacheFluentEmojis = async (): Promise<CacheFluentEmojisRes> => {
   }
 
   return {
-    cacheDir: cacheDir + '/' + emojiDir,
+    cacheDir,
     metaFile,
     headIdFile,
     emojiDir,
   };
 };
+
+function capitalizeFirstLetter(str: string) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
 
 export enum FluentEmojiTypeEnum {
   _3D = '3D',
@@ -58,14 +62,23 @@ export const getFluentEmoji = async (
     return;
   }
 
-  const emojiPath: string = emojiInfo?.cldr || '';
+  const cldr: string = emojiInfo?.cldr || '';
+  const realCldr =  capitalizeFirstLetter(cldr);
   const ext = type === FluentEmojiTypeEnum._3D ? 'png' : 'svg';
-  const filename = `${emojiPath.split(' ').join('_')}_${type}.${ext}`;
+  const filename = `${cldr.split(' ').join('_')}_${type.toLowerCase()}`;
+  let file = `${filename}.${ext}`;
+  let p = `${config.emojiDir}/${realCldr}/${type}/${file}`;
+
+  if (!await stat(`${config.cacheDir}/${p}`).then((v) => v.isFile).catch(() => false)) {
+    file = `${filename}_default.${ext}`;
+    p = `${config.emojiDir}/${realCldr}/Default/${type}/${file}`
+  }
 
   return {
     meta: emojiInfo,
+    file,
     filename,
-    path: `${config.cacheDir}/${emojiPath}/${type}/${filename}`,
-    remotePath: `${config.emojiDir}/${emojiPath}/${type}/${filename}`,
+    path: `${config.cacheDir}/${p}`,
+    remotePath: p,
   };
 };

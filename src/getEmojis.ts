@@ -10,6 +10,7 @@ type EmojiInfo = {
   gemoji?: Gemoji;
   from: number;
   to: number;
+  raw: string;
 };
 
 const emojiRegExp = emojiRegex();
@@ -31,6 +32,7 @@ const getEmojis = (str: string): EmojiInfo[] => {
       gemoji: ge,
       from,
       to: from + rawCode.length,
+      raw: rawCode,
     });
   }
 
@@ -43,6 +45,7 @@ const getEmojis = (str: string): EmojiInfo[] => {
       gemoji: gemoji.find((v) => v.emoji === emoji),
       from,
       to: from + emoji.length,
+      raw: emoji,
     });
   }
 
