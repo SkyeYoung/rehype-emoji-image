@@ -1,6 +1,6 @@
 {
   "name": "rehype-emoji-image",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "",
   "module": "dist/main.esm.js",
   "main": "dist/main.js",
