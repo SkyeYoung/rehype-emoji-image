@@ -50,7 +50,7 @@ const transformer = async (
         p = fluentEmoji.remotePath;
       }
 
-      res = /*html*/ `<img src="${p}" width="${option.emojiSize}" height="${option.emojiSize}" alt="${v.gemoji?.description || v.shortCode}" title="${
+      res = /*html*/ `<img style="display: inline-block;" src="${p}" width="${option.emojiSize}" height="${option.emojiSize}" alt="${v.gemoji?.description || v.shortCode}" title="${
         v.emoji
       }" />`;
     }
