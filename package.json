@@ -1,13 +1,11 @@
 {
   "name": "rehype-emoji-image",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "",
   "module": "dist/main.esm.js",
-  "main": "dist/main.js",
   "types": "dist/main.d.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc && esbuild src/main.ts --bundle --format=esm --minify --platform=node --outfile=dist/main.esm.js && esbuild src/main.ts --bundle --format=cjs --minify --platform=node --outfile=dist/main.js"
+    "build": "tsc && esbuild src/main.ts --bundle --format=esm --minify --platform=node --outfile=dist/main.esm.js"
   },
   "keywords": [],
   "author": "",
