@@ -31,7 +31,7 @@ const transformer = async (
 
     let res: string;
     if (!fluentEmoji) {
-      res = /*html*/ `<span aria-label="${v.gemoji?.description || v.shortCode}" role="img">${
+      res = /*html*/ `<span class="emoji-span" aria-label="${v.gemoji?.description || v.shortCode}" role="img">${
         v.emoji
       }</span>`;
     } else {
@@ -50,7 +50,7 @@ const transformer = async (
         p = fluentEmoji.remotePath;
       }
 
-      res = /*html*/ `<img style="display: inline-block;" src="${p}" width="${option.emojiSize}" height="${option.emojiSize}" alt="${v.gemoji?.description || v.shortCode}" title="${
+      res = /*html*/ `<img class="emoji-img" style="display: inline-block;" src="${p}" width="${option.emojiSize}" height="${option.emojiSize}" alt="${v.gemoji?.description || v.shortCode}" title="${
         v.emoji
       }" />`;
     }
