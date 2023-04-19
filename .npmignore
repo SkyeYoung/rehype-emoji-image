@@ -1,2 +1,5 @@
 *.d.ts
 !main.d.ts
+/node_modules
+/.emoji-cache
+/dist
