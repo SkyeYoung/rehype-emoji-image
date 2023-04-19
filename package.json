@@ -1,6 +1,6 @@
 {
   "name": "rehype-emoji-image",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "",
   "main": "dist/main.js",
   "types": "dist/main.d.ts",
