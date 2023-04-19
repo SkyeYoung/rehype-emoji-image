@@ -1,12 +1,15 @@
-import simpleGit, { SimpleGit } from 'simple-git';
 import { readdir, stat, readFile, writeFile } from 'fs/promises';
 import { join } from 'path';
+import { promisify } from 'util';
+import { execFile } from 'child_process';
 
 export const isDirExisted = async (p: string) => {
   return stat(p)
     .then((v) => v.isDirectory())
     .catch(() => false);
 };
+
+const execFileAsync = promisify(execFile);
 
 type Config = {
   path: string;
@@ -15,24 +18,14 @@ type Config = {
 };
 
 export const fetchOrUpdateCache = async (config: Config) => {
-  let git: SimpleGit;
   const { path, url, sparsePaths } = config;
   if (await isDirExisted(path)) {
-    git = simpleGit(path);
-    await git.cwd(path).fetch(['--prune', '--filter=blob:none', '--recurse-submodules=no']);
+    await execFileAsync('git', [`-C`, path, 'fetch', '--prune', '--filter=blob:none', '--recurse-submodules=no']);
   } else {
-    git = simpleGit();
-    await git
-      .clone(url, path, {
-        '--filter': 'blob:none',
-        '--sparse': null,
-        '--recurse-submodules': 'no',
-      })
-      .cwd(path)
-      .raw(['sparse-checkout', 'set', ...sparsePaths]);
+    await execFileAsync('git', ['clone', url, path, '--filter=blob:none', '--depth=1', '--sparse', '--recurse-submodules=no', '--no-checkout']);
+    await execFileAsync('git', [`-C`, path, 'sparse-checkout', 'set', ...sparsePaths]);
+    await execFileAsync('git', [`-C`, path, 'checkout', 'HEAD']);
   }
-
-  return git;
 };
 
 type TraverseFolderCallback = (params: {
@@ -68,14 +61,16 @@ export async function traverseFolder(
   }
 }
 
-export const needUpdate = async (git: SimpleGit, headIdFile: string) =>
-  Promise.all([git.revparse(['HEAD']), readFile(headIdFile, 'utf-8').catch(() => '')]).then(
-    async ([headId, oldHeadId]) => {
-      if (headId === oldHeadId) {
-        return false;
-      }
+export const needUpdate = async (config: Config, headIdFile: string) => {
+  const [headId, oldHeadId] = await Promise.all([
+    execFileAsync('git', [`--git-dir=${config.path}/.git`, 'rev-parse', 'HEAD']),
+    readFile(headIdFile, 'utf-8').catch(() => ''),
+  ]);
 
-      await writeFile(headIdFile, headId, 'utf-8');
-      return true;
-    }
-  );
+  if (headId.stdout.trim() === oldHeadId.trim()) {
+    return false;
+  }
+
+  await writeFile(headIdFile, headId.stdout, 'utf-8');
+  return true;
+};

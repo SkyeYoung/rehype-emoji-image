@@ -7,20 +7,21 @@ type CacheFluentEmojisRes = {
   headIdFile: string;
   emojiDir: string;
 };
-export const cacheFluentEmojis = async (): Promise<CacheFluentEmojisRes> => {
+export const cacheFluentEmojisCore = async (): Promise<CacheFluentEmojisRes> => {
   const rootDir = '.emoji-cache';
   const cacheDir = `${rootDir}/fluent-emojis`;
   const metaFile = `${rootDir}/fluent-emojis.json`;
   const headIdFile = `${rootDir}/fluent-emojis-head-id.txt`;
   const emojiDir = `assets`;
-
-  const git = await fetchOrUpdateCache({
+  const config = {
     path: cacheDir,
     url: 'https://github.com/microsoft/fluentui-emoji.git',
     sparsePaths: [emojiDir],
-  });
+  };
 
-  if (await needUpdate(git, headIdFile)) {
+  await fetchOrUpdateCache(config);
+
+  if (await needUpdate(config, headIdFile)) {
     const emojiMap = {};
     await traverseFolder(`${cacheDir}/${emojiDir}`, async ({ filePath }) => {
       if (filePath.endsWith('metadata.json')) {
@@ -40,6 +41,16 @@ export const cacheFluentEmojis = async (): Promise<CacheFluentEmojisRes> => {
     emojiDir,
   };
 };
+
+let cache: Promise<CacheFluentEmojisRes>;
+export const cacheFluentEmojis = () =>{
+  if (cache) {
+    return cache
+  }
+
+  cache = cacheFluentEmojisCore();
+  return cache;
+}
 
 function capitalizeFirstLetter(str: string) {
   return str.charAt(0).toUpperCase() + str.slice(1);
