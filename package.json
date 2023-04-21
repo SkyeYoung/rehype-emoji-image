@@ -1,13 +1,25 @@
 {
   "name": "rehype-emoji-image",
-  "version": "0.1.6",
-  "description": "",
+  "version": "0.1.7",
+  "description": "Converts emojis or shortcodes to images, currently only supports Fluent Emoji.",
   "main": "dist/main.js",
   "types": "dist/main.d.ts",
-  "keywords": [],
+  "keywords": [
+    "rehype",
+    "emoji",
+    "shortcode",
+    "image",
+    "fluent emoji",
+    "convert"
+  ],
   "author": {
     "name": "Skye Young",
     "email": "young@apache.org"
+  },
+  "homepage": "https://github.com/SkyeYoung/rehype-emoji-image",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SkyeYoung/rehype-emoji-image.git"
   },
   "license": "ISC",
   "dependencies": {
