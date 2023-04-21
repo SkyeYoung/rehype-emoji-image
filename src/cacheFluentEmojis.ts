@@ -1,5 +1,6 @@
 import { fetchOrUpdateCache, needUpdate, traverseFolder } from './common';
 import { readFile, writeFile, stat } from 'fs/promises';
+import { Option } from './main';
 
 type CacheFluentEmojisRes = {
   cacheDir: string;
@@ -7,11 +8,10 @@ type CacheFluentEmojisRes = {
   headIdFile: string;
   emojiDir: string;
 };
-export const cacheFluentEmojisCore = async (): Promise<CacheFluentEmojisRes> => {
-  const rootDir = '.emoji-cache';
-  const cacheDir = `${rootDir}/fluent-emojis`;
-  const metaFile = `${rootDir}/fluent-emojis.json`;
-  const headIdFile = `${rootDir}/fluent-emojis-head-id.txt`;
+export const cacheFluentEmojisCore = async (option: Option): Promise<CacheFluentEmojisRes> => {
+  const { cacheDir } = option;;
+  const metaFile = `${cacheDir}/fluent-emojis.json`;
+  const headIdFile = `${cacheDir}/fluent-emojis-head-id.txt`;
   const emojiDir = `assets`;
   const config = {
     path: cacheDir,
@@ -43,12 +43,12 @@ export const cacheFluentEmojisCore = async (): Promise<CacheFluentEmojisRes> => 
 };
 
 let cache: Promise<CacheFluentEmojisRes>;
-export const cacheFluentEmojis = () =>{
+export const cacheFluentEmojis = (option: Option) =>{
   if (cache) {
     return cache
   }
 
-  cache = cacheFluentEmojisCore();
+  cache = cacheFluentEmojisCore(option);
   return cache;
 }
 

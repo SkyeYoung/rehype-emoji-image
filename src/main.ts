@@ -65,7 +65,7 @@ const transformer = async (
   return [true, finalStr];
 };
 
-type Option = {
+export type Option = {
   publicDir?: string;
   emojiType?: FluentEmojiTypeEnum;
   emojiSize?: string;
@@ -74,8 +74,19 @@ type Option = {
   publicPrefix?: string;
 };
 
-const main = (option: Option) => async (tree: Parameters<typeof visit>[0]) => new Promise(async (resolve, reject ) =>{
-  const cacheConfig = await cacheFluentEmojis();
+const main = (option: Option) => async (tree: Parameters<typeof visit>[0]) => new Promise(async (resolve ) =>{
+  const realOption = {
+    ...{
+      publicDir: 'public',
+      emojiType: FluentEmojiTypeEnum._3D,
+      emojiSize: '24',
+      location: 'local' as const,
+      publicPrefix: 'public',
+      cacheDir: '.next/cache/emojis'
+    },
+    ...option,
+  };
+  const cacheConfig = await cacheFluentEmojis(realOption);
 
   const nodesShouldCheck = [];
 
@@ -86,16 +97,7 @@ const main = (option: Option) => async (tree: Parameters<typeof visit>[0]) => ne
   for (const node of nodesShouldCheck) {
     const [hasEmojis, value ] = await transformer(
       (node as any).value,
-      {
-        ...{
-          publicDir: 'public',
-          emojiType: FluentEmojiTypeEnum._3D,
-          emojiSize: '24',
-          location: 'local',
-          publicPrefix: 'public',
-        },
-        ...option,
-      },
+      realOption,
       cacheConfig
     );
 
