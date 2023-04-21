@@ -10,11 +10,12 @@ type CacheFluentEmojisRes = {
 };
 export const cacheFluentEmojisCore = async (option: Option): Promise<CacheFluentEmojisRes> => {
   const { cacheDir } = option;;
+  const gitDir = `${cacheDir}/fluent-emojis`;
   const metaFile = `${cacheDir}/fluent-emojis.json`;
   const headIdFile = `${cacheDir}/fluent-emojis-head-id.txt`;
   const emojiDir = `assets`;
   const config = {
-    path: cacheDir,
+    path: gitDir,
     url: 'https://github.com/microsoft/fluentui-emoji.git',
     sparsePaths: [emojiDir],
   };
@@ -23,7 +24,7 @@ export const cacheFluentEmojisCore = async (option: Option): Promise<CacheFluent
 
   if (await needUpdate(config, headIdFile)) {
     const emojiMap = {};
-    await traverseFolder(`${cacheDir}/${emojiDir}`, async ({ filePath }) => {
+    await traverseFolder(`${gitDir}/${emojiDir}`, async ({ filePath }) => {
       if (filePath.endsWith('metadata.json')) {
         const data = JSON.parse(await readFile(filePath, 'utf-8'));
         emojiMap[data.glyph] = data;
