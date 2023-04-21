@@ -1,12 +1,13 @@
 import { visit } from 'unist-util-visit';
 import getEmojis from './getEmojis';
 import { FluentEmojiTypeEnum, cacheFluentEmojis, getFluentEmoji } from './cacheFluentEmojis';
-import { copyFile } from 'fs/promises';
-import { join } from 'path';
+import { copyFile, mkdir } from 'fs/promises';
+import path, { join } from 'path';
 import { fromHtml } from 'hast-util-from-html';
 
 type CopySet = Set<Pick<Awaited<ReturnType<typeof getFluentEmoji>>, 'file' | 'path'>>;
 const copyImg2Public = async (copySet: CopySet, option: Option) => {
+  await mkdir(option.publicDir, { recursive: true });
   await Promise.all(Array.from(copySet).map((v) => copyFile(
     join(process.cwd(),v.path), 
     join(process.cwd(),option.publicDir, v.file))));

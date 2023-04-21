@@ -1,4 +1,4 @@
-import { readdir, stat, readFile, writeFile } from 'fs/promises';
+import { readdir, stat, readFile, writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { promisify } from 'util';
 import { execFile } from 'child_process';
@@ -22,6 +22,7 @@ export const fetchOrUpdateCache = async (config: Config) => {
   if (await isDirExisted(path)) {
     await execFileAsync('git', [`-C`, path, 'fetch', '--prune', '--filter=blob:none', '--recurse-submodules=no']);
   } else {
+    await mkdir(path, { recursive: true });
     await execFileAsync('git', ['clone', url, path, '--filter=blob:none', '--depth=1', '--sparse', '--recurse-submodules=no', '--no-checkout']);
     await execFileAsync('git', [`-C`, path, 'sparse-checkout', 'set', ...sparsePaths]);
     await execFileAsync('git', [`-C`, path, 'checkout', 'HEAD']);
